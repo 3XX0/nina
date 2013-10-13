@@ -1,0 +1,64 @@
+CC			=	g++
+RM			=	rm -f
+
+OS_TYPE		=	UNUSED
+
+##
+# NINA project definitions
+##
+
+NINA_NAME	=	../bin/nina-test
+
+NINA_SRCS	=	../src/NinaAddr.cpp \
+				../src/NinaInetAddr.cpp \
+				../src/NinaSAP.cpp \
+				../src/NinaSock.cpp \
+				../src/NinaSockIO.cpp \
+				../src/NinaSockStream.cpp \
+				../src/NinaIOContainer.cpp \
+				../src/NinaSelectReactor.cpp \
+				../src/NinaTime.cpp \
+				../src/NinaOS.cpp \
+				../debug/testAddr.cpp \
+				../debug/testTime.cpp \
+				../debug/testIOContainer.cpp \
+				../debug/testSock.cpp \
+				../debug/main.cpp
+
+NINA_OBJS	=	$(NINA_SRCS:.cpp=.o)
+
+INCLUDES	=	../inc/ \
+				../src/
+
+##
+
+INCFLAGS	=	$(addprefix -I, $(INCLUDES))
+CXXFLAGS	=	-W -Wall -Wextra -Wno-strict-aliasing -std=c++98 -pedantic -O2 -DNINA_$(OS_TYPE)
+
+%.o			:	%.cpp
+				@$(CC) $(CXXFLAGS) -c $< -o $@ $(INCFLAGS)
+				@echo -e "\033[32;1m[OK]\033[m $<"
+
+.PHONY		:	all clean fclean re
+
+##
+# Rules definitions
+##
+
+$(NINA_NAME) :	$(NINA_OBJS)
+				@$(CC) -o $(NINA_NAME) $(NINA_OBJS)
+				@echo -e "\033[34;1mLinking done\033[m"
+
+all			 :	$(NINA_NAME)
+
+clean		 :
+				@$(RM) $(NINA_OBJS)
+				@echo -e "\033[31;1mRemoving:\033[m $(NINA_OBJS)"
+
+fclean		 :	clean
+				@$(RM) $(NINA_NAME)
+				@echo -e "\033[31;1mRemoving:\033[m $(NINA_NAME)"
+
+re			 :	fclean all
+
+##

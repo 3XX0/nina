@@ -1,0 +1,93 @@
+// Copyright (c) 2011, Jonathan Calmels <jbjcalmels@gmail.com>
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+/*!
+ * @file NinaEventHandlerAdapter.imp
+ * @brief Implements a class useful to handle events with functions pointers
+ * @author Jonathan Calmels
+ * @date Sat Jul 30 2011
+ */
+
+NINA_BEGIN_NAMESPACE_DECL
+
+template <class IPC_STREAM>
+EventHandlerAdapter<IPC_STREAM>::EventHandlerAdapter(Addr const& addr, int family,
+	   									int protocol, bool reuseAddr)
+	: EventHandler(),
+	mReadHandler(0),
+	mWriteHandler(0),
+	mUrgentHandler(0),
+	mTimeoutHandler(0),
+	mSignalHandler(0),
+	mCloseHandler(0),
+	mIPCStream()
+{
+	if (mIPCStream.open(addr, family, protocol, reuseAddr) < 0)
+		throw Error::SystemError(errno);
+}
+
+template <class IPC_STREAM>
+EventHandlerAdapter<IPC_STREAM>::EventHandlerAdapter(Addr const& addr, int family,
+	   					std::string const& protocol, bool reuseAddr)
+	: EventHandler(),
+	mReadHandler(0),
+	mWriteHandler(0),
+	mUrgentHandler(0),
+	mTimeoutHandler(0),
+	mSignalHandler(0),
+	mCloseHandler(0),
+	mIPCStream()
+{
+	try {
+		mIPCStream.open(addr, family, protocol, reuseAddr);
+	}
+	catch (Error::SystemError) {
+		throw;
+	}
+}
+
+template <class IPC_STREAM>
+EventHandlerAdapter<IPC_STREAM>::~EventHandlerAdapter()
+{
+}
+
+template <class IPC_STREAM>
+EventHandlerAdapter<IPC_STREAM>::EventHandlerAdapter(EventHandlerAdapter const& eha)
+	: EventHandler(eha),
+	mReadHandler(eha.mReadHandler),
+	mWriteHandler(eha.mWriteHandler),
+	mUrgentHandler(eha.mUrgentHandler),
+	mTimeoutHandler(eha.mTimeoutHandler),
+	mSignalHandler(eha.mSignalHandler),
+	mCloseHandler(eha.mCloseHandler),
+	mIPCStream(eha.mIPCStream)
+{
+}
+
+template <class IPC_STREAM> EventHandlerAdapter<IPC_STREAM>&
+EventHandlerAdapter<IPC_STREAM>::operator=(EventHandlerAdapter const& eha)
+{
+	if (this != &eha) {
+		mReadHandler = eha.mReadHandler;
+		mWriteHandler = eha.mWriteHandler;
+		mUrgentHandler = eha.mUrgentHandler;
+		mTimeoutHandler = eha.mTimeoutHandler;
+		mSignalHandler = eha.mSignalHandler;
+		mCloseHandler = eha.mCloseHandler;
+		mIPCStream = eha.mIPCStream;
+	}
+	return *this;
+}
+
+NINA_END_NAMESPACE_DECL

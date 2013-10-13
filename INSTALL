@@ -1,0 +1,66 @@
+##############################
+#                            #
+#         NINA API           #
+#                            #
+##############################
+
+------------------------------
+
+* For GNU/LINUX or UNIX users
+
+- Install cmake packages (http://www.cmake.org)
+- Build NINA sources with one of the following methods :
+
+  . Using "cmake"
+
+1. cd build/
+2. cmake . -DCMAKE_BUILD_TYPE:STRING=Release
+3. make
+
+  . Using "ccmake"
+	
+1. cd build/
+2. ccmake .
+3. Then press 'c', update CMAKE_BUILD_TYPE with 'enter' to "Release"
+4. Press 'c' again, then press 'g'
+5. make
+
+------------------------------
+
+* For Win32 users
+
+- Install cmake packages (http://www.cmake.org)
+- Open Cmake.exe and fill the 'source code' and 'binaries building' fields with the path of NINA /build directory
+- Click on configure then fill the field CMAKE_BUILD_TYPE with "Release"
+- Finish by clicking on generate
+- From Visual studio, select the .sln generated into /build and compile the project
+
+------------------------------
+
+NINA library will be built into /lib/Release folder
+
+##############################
+#                            #
+#         NINA DOC           #
+#                            #
+##############################
+
+The documentation will be generated under the folder "doc/api-doc"
+The NINA project tree is explained into the README file, please refer to it if you are in doubt.
+
+------------------------------
+
+* For GNU/LINUX or UNIX users
+
+- Install doxygen (http://www.doxygen.org)
+- cd /build
+- make doc
+
+------------------------------
+
+* For Win32 users
+
+- Install doxygen (http://www.doxygen.org)
+- From Visual studio, select the .sln generated into /build and run the "doc" target
+
+------------------------------

@@ -1,0 +1,118 @@
+// Copyright (c) 2011, Jonathan Calmels <jbjcalmels@gmail.com>
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+/*!
+ * @file NinaAcceptor.imp
+ * @brief Implements the acceptor design pattern
+ * @author Jonathan Calmels
+ * @date Sun Sep 04 2011
+ */
+
+NINA_BEGIN_NAMESPACE_DECL
+
+template <class SVC_HANDLER, class IPC_ACCEPTOR, class SYNC_POLICY, bool THROW_ON_ERR>
+Acceptor<SVC_HANDLER, IPC_ACCEPTOR, SYNC_POLICY, THROW_ON_ERR>::Acceptor(Reactor<SYNC_POLICY>* reactor)
+	: EventHandler(),
+	mIsSuspended(false),
+	mReactor(reactor)
+{
+	if (reactor == 0)
+		throw std::invalid_argument("Invalid Reactor");
+}
+
+template <class SVC_HANDLER, class IPC_ACCEPTOR, class SYNC_POLICY, bool THROW_ON_ERR>
+Acceptor<SVC_HANDLER, IPC_ACCEPTOR, SYNC_POLICY, THROW_ON_ERR>::~Acceptor()
+{
+	// Do not throw error on acceptor destruction
+	mIsSuspended = true;
+	mReactor->removeHandler(this, Events::ACCEPT);
+}
+
+template <class SVC_HANDLER, class IPC_ACCEPTOR, class SYNC_POLICY, bool THROW_ON_ERR>
+Acceptor<SVC_HANDLER, IPC_ACCEPTOR, SYNC_POLICY, THROW_ON_ERR>::Acceptor(Acceptor const& acceptor)
+	: EventHandler(acceptor),
+	mIPCAcceptor(acceptor.mIPCAcceptor),
+	mIsSuspended(false),
+	mReactor(acceptor.mReactor)
+{	
+}
+
+template <class SVC_HANDLER, class IPC_ACCEPTOR, class SYNC_POLICY, bool THROW_ON_ERR>
+Acceptor<SVC_HANDLER, IPC_ACCEPTOR, SYNC_POLICY, THROW_ON_ERR>&
+Acceptor<SVC_HANDLER, IPC_ACCEPTOR, SYNC_POLICY, THROW_ON_ERR>::operator=(Acceptor const& acceptor)
+{
+	if (this != &acceptor) {
+		mIPCAcceptor = acceptor.mIPCAcceptor;
+		mIsSuspended = false;
+		mReactor = acceptor.mReactor;
+	}
+	return *this;
+}
+
+template <class SVC_HANDLER, class IPC_ACCEPTOR, class SYNC_POLICY, bool THROW_ON_ERR> int
+Acceptor<SVC_HANDLER, IPC_ACCEPTOR, SYNC_POLICY, THROW_ON_ERR>::handleClose(NINAHandle)
+{
+	if (THROW_ON_ERR == true && mIsSuspended == false) {
+		if (errno == 0)
+			throw Error::SystemError("Error while initializing the ServiceHandler");
+		else
+			throw Error::SystemError(errno);
+	}
+	mIsSuspended = false;
+	return 0;
+}
+
+template <class SVC_HANDLER, class IPC_ACCEPTOR, class SYNC_POLICY, bool THROW_ON_ERR> int
+Acceptor<SVC_HANDLER, IPC_ACCEPTOR, SYNC_POLICY, THROW_ON_ERR>::open(_Addr const& addr,
+		bool sockNonBlock, int family, int protocol, bool reuseAddr, int backlog)
+{
+	if (mIPCAcceptor.open(addr, family, protocol, reuseAddr, backlog) < 0)
+		return -1;
+	if (sockNonBlock == true)
+		mIPCAcceptor.enable(SAP::NON_BLOCK);
+	return mReactor->registerHandler(this, Events::ACCEPT);
+}
+
+template <class SVC_HANDLER, class IPC_ACCEPTOR, class SYNC_POLICY, bool THROW_ON_ERR> int
+Acceptor<SVC_HANDLER, IPC_ACCEPTOR, SYNC_POLICY, THROW_ON_ERR>::accept()
+{
+	SVC_HANDLER* serviceHandler;
+
+	serviceHandler = makeServiceHandler();
+	if (acceptServiceHandler(serviceHandler) < 0)
+		return -1;
+	return initServiceHandler(serviceHandler);
+}
+
+template <class SVC_HANDLER, class IPC_ACCEPTOR, class SYNC_POLICY, bool THROW_ON_ERR> int
+Acceptor<SVC_HANDLER, IPC_ACCEPTOR, SYNC_POLICY, THROW_ON_ERR>::acceptServiceHandler(SVC_HANDLER* serviceHandler)
+{
+	if (mIPCAcceptor.accept(serviceHandler->getPeer()) < 0) {
+		delete serviceHandler;
+		return -1;
+	}
+	return 0;
+}
+
+template <class SVC_HANDLER, class IPC_ACCEPTOR, class SYNC_POLICY, bool THROW_ON_ERR> int
+Acceptor<SVC_HANDLER, IPC_ACCEPTOR, SYNC_POLICY, THROW_ON_ERR>::initServiceHandler(SVC_HANDLER* serviceHandler) const
+{
+	if (serviceHandler->init() < 0) {
+		delete serviceHandler;
+		return -1;
+	}
+	return 0;
+}
+
+NINA_END_NAMESPACE_DECL

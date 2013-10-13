@@ -1,0 +1,14 @@
+@current
+NINA Version 0.2 BETA | Wed Oct 12 23:30:44 CEST 2011
+	-> Win32 DLL
+	-> Reactor implementation based on policies
+	-> 4 S.E.D policies (Epoll, Poll, Kqueue, Select)
+	-> IPC connector/acceptor
+	-> Acceptor pattern
+
+NINA Version 0.1 BETA | Fri Jul 22 04:13:21 CEST 2011
+	-> Basics of addressing
+	-> Socket wrapping up to SOCK_STREAM
+	-> IPv4/IPv6
+	-> Time encapsulation
+	-> I/O operations
